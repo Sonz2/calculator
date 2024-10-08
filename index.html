@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html lang="th">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>เครื่องคิดเลข</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
     <div class="calculator">
         <input type="text" id="display" disabled>
+        <div class="button-delete">
+            <button class="delete-btn" onclick="deleteLastChar()" class="disabled">←</button>
+        </div>
         <div class="button-row">
+            <button class="C-btn" onclick="clearDisplay()">C</button>
             <button onclick="appendToDisplay('(')">(</button>
             <button onclick="appendToDisplay(')')">)</button>
             <button onclick="appendToDisplay('/')">/</button>
-            <button onclick="clearDisplay()">C</button>
-            
         </div>
         <div class="button-row">
-            
             <button onclick="appendToDisplay('7')">7</button>
             <button onclick="appendToDisplay('8')">8</button>
             <button onclick="appendToDisplay('9')">9</button>
-            <button onclick="appendToDisplay('*')">*</button>
+            <button onclick="appendToDisplay('*')">x</button>
         </div>
         <div class="button-row">
             <button onclick="appendToDisplay('4')">4</button>
@@ -35,50 +38,86 @@
             <button onclick="appendToDisplay('3')">3</button>
             <button onclick="appendToDisplay('+')">+</button>
         </div>
-        
         <div class="button-row">
             <button onclick="appendToDisplay('.')">.</button>
             <button onclick="appendToDisplay('0')">0</button>
             <button onclick="appendToDisplay('%')">%</button>
+            <button class="result-btn" onclick="calculateResult()">=</button>
         </div>
-        <div class="button-row">
-            
-            
-            
-            <button onclick="calculateResult()">=</button>
-            
+        <div id="history">
+            <div class="history-header">
+                <h3>ประวัติการคำนวณ</h3>
+                <button class="clear-history-btn" onclick="clearHistory()">เคลียร์ประวัติ</button>
+            </div>
+            <ul id="history-list"></ul>
         </div>
     </div>
-    <script src="script.js"></script>
-</body>
-</html>
-
     <script>
+        let history = [];
+
         function appendToDisplay(value) {
-    const display = document.getElementById('display');
-    display.value += value;
-}
+            const display = document.getElementById('display');
+            // เช็คว่า display แสดง 'Error' หรือ 'undefined' หรือไม่
+            if (display.value === 'Error' || display.value === 'undefined') {
+                display.value = '';
+            }
 
-function clearDisplay() {
-    const display = document.getElementById('display');
-    display.value = '';
-}
+            // ตรวจสอบไม่ให้มีการป้อน operator ซ้ำ
+            const operators = ['+', '-', '*', '/'];
+            const lastChar = display.value.slice(-1);
+            if (operators.includes(lastChar) && operators.includes(value)) {
+                return;
+            }
 
-function calculateResult() {
-    const display = document.getElementById('display');
-    try {
-        let result = eval(display.value);
-        // หากมี % ให้แปลงเป็นเปอร์เซ็นต์
-        if (display.value.includes('%')) {
-            const percentValue = parseFloat(display.value.replace('%', '')) / 100;
-            result = result * percentValue;
+            display.value += value;
         }
-        display.value = result;
-    } catch (error) {
-        display.value = 'Error';
-    }
-}
 
+        function clearDisplay() {
+            const display = document.getElementById('display');
+            display.value = '';
+        }
+
+        function deleteLastChar() {
+            const display = document.getElementById('display');
+            display.value = display.value.slice(0, -1);
+        }
+
+        function calculateResult() {
+            const display = document.getElementById('display');
+            try {
+                let expression = display.value;
+                let result = eval(expression);
+
+                // ตรวจสอบว่ามีการใช้ % หรือไม่
+                if (expression.includes('%')) {
+                    const percentValue = parseFloat(expression.replace('%', '')) / 100;
+                    result = result * percentValue;
+                }
+
+                // บันทึกประวัติการคำนวณ
+                history.push(`${expression} = ${result}`);
+                display.value = result;
+                updateHistory(); // อัปเดตประวัติ
+            } catch (error) {
+                display.value = 'Error';
+            }
+        }
+
+        function updateHistory() {
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = ''; // ล้างประวัติเดิม
+            history.forEach(entry => {
+                const listItem = document.createElement('li');
+                listItem.textContent = entry;
+                historyList.appendChild(listItem);
+            });
+        }
+
+        function clearHistory() {
+            const historyListElement = document.getElementById('history-list');
+            historyListElement.innerHTML = ''; // ลบรายการประวัติทั้งหมด
+            history = []; // รีเซ็ตประวัติใน array
+        }
     </script>
 </body>
 
